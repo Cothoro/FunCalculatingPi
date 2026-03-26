@@ -1,23 +1,24 @@
 import numpy as np
 import pyray as rl
 
+# Global constants and variables
 RENDER_SIZE = 900
 TEXT_AREA_SIZE = 100
 
 RUNNING_SIMULATION = False
 TOTAL_POINTS = 500_000  # Number of random points before we stop
-POINTS_PER_FRAME = 500    # Number of points to generate per frame
+POINTS_PER_FRAME = 500  # Number of points to generate per frame
 num_points = 0          # Number of points generated so far
 points_in_circle = 0    # Number of points that are inside the unit circle
 
 STATE_RANDOM = 0
-
 STATE_UNIFORM = 1
-# Calculate the step size for uniform distribution based on the total number of points and the render size
+current_state = STATE_RANDOM
+
+# Calculate the step size for uniform distribution based on the total number of points
 DX = 2 / (TOTAL_POINTS ** 0.5)
 DY = 2 / (TOTAL_POINTS ** 0.5) 
 
-current_state = STATE_RANDOM
 
 def is_point_in_circle(x, y):
     """Check if the point (x, y) is inside the unit circle."""
@@ -40,6 +41,7 @@ def gen_random_point():
     color = rl.BLACK if is_point_in_circle(x, y) else rl.RED
     plot_point(x, y, color)
 
+
 def gen_uniform_point():
     """Generate a point (x, y) in a uniform grid pattern."""
     global num_points
@@ -50,7 +52,7 @@ def gen_uniform_point():
     col = num_points % int(2 / DX)   # Calculate the current column
 
     x = -1 + col * DX + DX / 2  # Center the point in the cell
-    y = 1 - (row * DY + DY / 2)  # Center the point in the cell
+    y = 1 - (row * DY + DY / 2) # Center the point in the cell
 
     if is_point_in_circle(x, y):
         global points_in_circle
@@ -60,6 +62,7 @@ def gen_uniform_point():
 
     color = rl.BLACK if is_point_in_circle(x, y) else rl.RED
     plot_point(x, y, color)
+
 
 def estimate_pi():
     """Estimate the value of pi using the ratio of points inside the circle."""
@@ -74,6 +77,7 @@ def plot_point(x, y, color):
     screen_y = int(y * (RENDER_SIZE / 2) + (RENDER_SIZE / 2))
     rl.draw_circle(screen_x, screen_y, 2, color)
 
+
 def reset_simulation():
     """Reset the simulation to its initial state."""
     global num_points, points_in_circle
@@ -83,6 +87,7 @@ def reset_simulation():
     rl.begin_texture_mode(render_texture)
     rl.clear_background(rl.RAYWHITE)
     rl.end_texture_mode()
+
 
 if __name__ == "__main__":
 
@@ -128,9 +133,9 @@ if __name__ == "__main__":
 
         rl.draw_texture(render_texture.texture, 0, 0, rl.WHITE)
 
-        # Draw the text
-        pi_estimation = estimate_pi()
-        text = f"Estimated Pi: {pi_estimation:.6f} (Points: {num_points})"
+        # Render the text area
+        pi_text = estimate_pi()
+        text = f"Estimated Pi: {pi_text:.6f} (Points: {num_points})"
         rl.draw_text_ex(font, text, (10, RENDER_SIZE + 10), 32, 0, rl.BLACK)
         # Mode text
         mode_text = "Mode: Random" if current_state == STATE_RANDOM else "Mode: Uniform"
