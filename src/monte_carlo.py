@@ -16,7 +16,7 @@ STATE_UNIFORM = 1       # Will generate points in a uniform grid pattern
 current_state = STATE_RANDOM
 
 # Step size to fill a -1 to 1 square with TOTAL_POINTS points
-# in a uniform grid pattern
+# in a uniform grid
 DX = 2 / (TOTAL_POINTS ** 0.5)
 DY = 2 / (TOTAL_POINTS ** 0.5) 
 

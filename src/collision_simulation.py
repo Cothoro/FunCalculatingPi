@@ -1,6 +1,7 @@
 import numpy as np
 import pyray as rl
 
+# Global Constants and variables
 TARGET_FPS = 60
 TIME_PER_FRAME = 1.0 / TARGET_FPS
 
@@ -26,7 +27,7 @@ LARGE_BLOCK_SIZE = 100
 
 FLOOR_Y = 610
 
-# Global variables
+# variables
 total_collisions = 0
 simulation_running = False
 simulation_done = False
@@ -60,7 +61,7 @@ def time_to_wall_collision(small):
 
 
 def elastic_collision(b1, b2):
-    """Apply elastic collision formulas to two blocks."""
+    """Apply elastic collision formulas to the two blocks."""
     m1, m2 = b1.mass, b2.mass
     v1, v2 = b1.dx, b2.dx
     total = m1 + m2

@@ -52,7 +52,7 @@ def draw_needle(x, y, angle):
     x2 = x - half_length * np.cos(angle)
     y2 = y - half_length * np.sin(angle)
 
-    rl.draw_line(int(x1), int(y1), int(x2), int(y2), rl.BLACK)
+    rl.draw_line_ex((int(x1), int(y1)), (int(x2), int(y2)), 2, rl.BLACK)
 
 def draw_parallel_lines():
     """Draw the parallel lines on the screen."""
