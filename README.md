@@ -2,7 +2,7 @@
 Computational Physics Small Project 1
 
 The presentation was made with LibreOffice Impress, I don't know if it will render correctly
-in Microsoft Powerpoint.
+in Microsoft Powerpoint. To view it formatted correctly please use the PDF.
 
 The real-time animation scripts are in /src and the graph generation and analysis notebooks are in
 /notebooks.
