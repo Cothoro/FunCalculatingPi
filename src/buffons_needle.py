@@ -2,23 +2,25 @@ import numpy as np
 import pyray as rl
 
 # Global constants and variables
-WINDOW_WIDTH = 900
+SIMULATION_WIDTH = 900
 WINDOW_HEIGHT = 1000
 
 # Simulation parameters
 SIMULATION_RUNNING = False
 NEEDLE_LENGTH = 50  # Length of the needle in pixels
 LINE_SPACING = 75   # Distance between the parallel lines in pixels
-NEEDLES_PER_FRAME = 10  # Number of needles to drop per frame
+NEEDLES_PER_FRAME = 500  # Number of needles to drop per frame
+TOTAL_NEEDLES = 500_000
 
 total_needles = 0
 crossing_needles = 0
 
 def gen_random_needle():
     """Generate a random needle position and angle."""
-    x = np.random.uniform(0, WINDOW_WIDTH)
-    y = np.random.uniform(0, WINDOW_WIDTH)  # We only drop needles in the upper square area
-    angle = np.random.uniform(0, np.pi)     # Angle in radians between 0 and π
+    # The simulation area is a square
+    x = np.random.uniform(0, SIMULATION_WIDTH)
+    y = np.random.uniform(0, SIMULATION_WIDTH)
+    angle = np.random.uniform(0, np.pi)
 
     global total_needles
     total_needles += 1
@@ -37,7 +39,8 @@ def is_needle_crossing_line(x, y, angle):
     # Calculate the vertical component of the needle's half-length
     half_length_vertical = (NEEDLE_LENGTH / 2) * np.sin(angle)
 
-    # The needle crosses a line if the vertical component is greater than the distance to the nearest line
+    # The needle crosses a line if the vertical component is greater than the distance
+    # to the nearest line
     return half_length_vertical >= distance_to_nearest_line
 
 def draw_needle(x, y, angle):
@@ -54,14 +57,23 @@ def draw_needle(x, y, angle):
 def draw_parallel_lines():
     """Draw the parallel lines on the screen."""
     for y in range(0, WINDOW_HEIGHT, LINE_SPACING):
-        rl.draw_line(0, y, WINDOW_WIDTH, y, rl.GRAY)
+        rl.draw_line(0, y, SIMULATION_WIDTH, y, rl.GRAY)
+
+def estimate_pi():
+    """Estimate the value of pi."""
+    if crossing_needles == 0:
+        return None  # Avoid division by zero
+
+    numerator = 2 * NEEDLE_LENGTH * total_needles
+    denominator = LINE_SPACING * crossing_needles
+    return numerator / denominator
 
 if __name__ == "__main__":
     rl.set_target_fps(60)
-    rl.init_window(WINDOW_WIDTH, WINDOW_HEIGHT, "Buffon's Needle Simulation")
+    rl.init_window(SIMULATION_WIDTH, WINDOW_HEIGHT, "Buffon's Needle Simulation")
 
     # This should just be a square so we have room for text at the bottom.
-    simulation_texture = rl.load_render_texture(WINDOW_WIDTH, WINDOW_WIDTH)
+    simulation_texture = rl.load_render_texture(SIMULATION_WIDTH, SIMULATION_WIDTH)
     rl.begin_texture_mode(simulation_texture)
     rl.clear_background(rl.RAYWHITE)
     rl.end_texture_mode()
@@ -81,9 +93,15 @@ if __name__ == "__main__":
         rl.begin_texture_mode(simulation_texture)
         draw_parallel_lines()
 
-        if SIMULATION_RUNNING:
+
+        if SIMULATION_RUNNING and total_needles < TOTAL_NEEDLES:
             for _ in range(NEEDLES_PER_FRAME):
+                if total_needles >= TOTAL_NEEDLES:
+                    break
                 gen_random_needle()
+        elif rl.is_key_pressed(rl.KEY_N):
+            # Drop one needle
+            gen_random_needle()
 
         rl.end_texture_mode()
 
@@ -91,17 +109,17 @@ if __name__ == "__main__":
 
         # Total needles text
         total_text = f"Total Needles: {total_needles}"
-        rl.draw_text_ex(font, total_text, (10, WINDOW_WIDTH + 10), 24, 1, rl.BLACK)
+        rl.draw_text_ex(font, total_text, (10, SIMULATION_WIDTH + 10), 24, 1, rl.BLACK)
         # Crossing needles text
         crossing_text = f"Crossing Needles: {crossing_needles}"
-        rl.draw_text_ex(font, crossing_text, (10, WINDOW_WIDTH + 40), 24, 1, rl.BLACK)
+        rl.draw_text_ex(font, crossing_text, (10, SIMULATION_WIDTH + 40), 24, 1, rl.BLACK)
         # Pi estimation text
-        if crossing_needles > 0:
-            pi_estimation = (2 * NEEDLE_LENGTH * total_needles) / (LINE_SPACING * crossing_needles)
+        pi_estimation = estimate_pi()
+        if pi_estimation is not None:
             pi_text = f"Estimated Pi: {pi_estimation:.6f}"
         else:
             pi_text = "Estimated Pi: N/A"
-        rl.draw_text_ex(font, pi_text, (10, WINDOW_WIDTH + 70), 24, 1, rl.BLACK)
+        rl.draw_text_ex(font, pi_text, (10, SIMULATION_WIDTH + 70), 24, 1, rl.BLACK)
 
         rl.end_drawing()
 

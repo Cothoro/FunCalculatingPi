@@ -2,3 +2,4 @@ numpy
 matplotlib
 raylib
 ipykernel
+mpmath

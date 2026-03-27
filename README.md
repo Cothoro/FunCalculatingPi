@@ -1,7 +1,13 @@
 # FunCalculatingPi
 Computational Physics Small Project 1
 
+The real-time animation scripts are in /src and the graph generation and analysis notebooks are in /notebooks.
+
 # Python Packages
+If you'd like, set up a virtual environment so that raylib is not installed system-wide and will be removed when this source code is deleted.
+https://docs.python.org/3/library/venv.html
+
+After activating the virtual environment run:
 ```
 pip install -r requirements.txt
 ```

@@ -5,17 +5,18 @@ import pyray as rl
 RENDER_SIZE = 900
 TEXT_AREA_SIZE = 100
 
-RUNNING_SIMULATION = False
-TOTAL_POINTS = 500_000  # Number of random points before we stop
-POINTS_PER_FRAME = 500  # Number of points to generate per frame
+SIMULATION_RUNNING = False
+TOTAL_POINTS = 500_000 
+POINTS_PER_FRAME = 500
 num_points = 0          # Number of points generated so far
-points_in_circle = 0    # Number of points that are inside the unit circle
+points_in_circle = 0 
 
-STATE_RANDOM = 0
-STATE_UNIFORM = 1
+STATE_RANDOM = 0        # Will generate points completely randomly
+STATE_UNIFORM = 1       # Will generate points in a uniform grid pattern
 current_state = STATE_RANDOM
 
-# Calculate the step size for uniform distribution based on the total number of points
+# Step size to fill a -1 to 1 square with TOTAL_POINTS points
+# in a uniform grid pattern
 DX = 2 / (TOTAL_POINTS ** 0.5)
 DY = 2 / (TOTAL_POINTS ** 0.5) 
 
@@ -46,13 +47,19 @@ def gen_uniform_point():
     """Generate a point (x, y) in a uniform grid pattern."""
     global num_points
 
-    # Calculate the x and y coordinates based on the current number of points
-    # We want to go top to bottom, left to right, so we calculate the row and column based on the number of points
-    row = num_points // int(2 / DY)  # Calculate the current row
-    col = num_points % int(2 / DX)   # Calculate the current column
+    # Calculate the x and y coordinates based on the current number
+    # of points drawn
+    number_of_columns = int(2 / DX)
+    row = num_points // number_of_columns
+    col = num_points % number_of_columns
 
-    x = -1 + col * DX + DX / 2  # Center the point in the cell
-    y = 1 - (row * DY + DY / 2) # Center the point in the cell
+    # subtract 1 to map [0, 2] to [-1, 1]
+    # then add half a step to center the point in its column/row
+    x = -1 + (col * DX + DX / 2)
+
+    # We take away from 1 instead here because in graphics libraries
+    # the y-axis is flipped
+    y = 1 - (row * DY + DY / 2)
 
     if is_point_in_circle(x, y):
         global points_in_circle
@@ -89,7 +96,48 @@ def reset_simulation():
     rl.end_texture_mode()
 
 
-if __name__ == "__main__":
+def process_keybinds():
+    """Process keybinds for controlling the simulation."""
+    global SIMULATION_RUNNING, current_state
+
+    if rl.is_key_pressed(rl.KEY_SPACE):
+        SIMULATION_RUNNING = not SIMULATION_RUNNING
+    if rl.is_key_pressed(rl.KEY_M):
+        if current_state == STATE_RANDOM:
+            current_state = STATE_UNIFORM
+        else:
+            current_state = STATE_RANDOM
+
+        SIMULATION_RUNNING = False
+        reset_simulation()
+    if rl.is_key_pressed(rl.KEY_R):
+        SIMULATION_RUNNING = False
+        reset_simulation()
+
+
+def run_simulation(render_texture):
+    """Run the simulation by generating points and drawing them on the render texture."""
+    global num_points
+
+    rl.begin_texture_mode(render_texture)
+    for _ in range(POINTS_PER_FRAME):
+        if current_state == STATE_RANDOM:
+            gen_random_point()
+        elif current_state == STATE_UNIFORM:
+            gen_uniform_point()
+    rl.end_texture_mode()
+
+
+def render_text_area(font):
+    """Render the text area with the current estimation of pi and the mode."""
+    pi_text = estimate_pi()
+    text = f"Estimated Pi: {pi_text:.6f} (Points: {num_points})"
+    rl.draw_text_ex(font, text, (10, RENDER_SIZE + 10), 32, 0, rl.BLACK)
+    mode_text = "Mode: Random" if current_state == STATE_RANDOM else "Mode: Uniform"
+    rl.draw_text_ex(font, mode_text, (10, RENDER_SIZE + 50), 32, 0, rl.BLACK)
+
+
+if __name__ =="__main__":
 
     rl.set_target_fps(60)
     rl.init_window(RENDER_SIZE, RENDER_SIZE + TEXT_AREA_SIZE, "Monte Carlo Pi Estimation")
@@ -105,41 +153,20 @@ if __name__ == "__main__":
     rl.end_texture_mode()
 
     while not rl.window_should_close():
-        if rl.is_key_pressed(rl.KEY_SPACE):
-            RUNNING_SIMULATION = not RUNNING_SIMULATION
-        if rl.is_key_pressed(rl.KEY_M):
-            if current_state == STATE_RANDOM:
-                current_state = STATE_UNIFORM
-            else:
-                current_state = STATE_RANDOM
-
-            RUNNING_SIMULATION = False
-            reset_simulation()
-        if rl.is_key_pressed(rl.KEY_R):
-            RUNNING_SIMULATION = False
-            reset_simulation()
+        process_keybinds()
         
         rl.begin_drawing()
         rl.clear_background(rl.RAYWHITE)
         
-        if RUNNING_SIMULATION and num_points < TOTAL_POINTS:
-            rl.begin_texture_mode(render_texture)
-            for _ in range(POINTS_PER_FRAME):
-                if current_state == STATE_RANDOM:
-                    gen_random_point()
-                elif current_state == STATE_UNIFORM:
-                    gen_uniform_point()
-            rl.end_texture_mode()
+        # Run the simulation
+        if SIMULATION_RUNNING and num_points < TOTAL_POINTS:
+            run_simulation(render_texture)
 
+        # Draw render texture of the simulation
         rl.draw_texture(render_texture.texture, 0, 0, rl.WHITE)
 
         # Render the text area
-        pi_text = estimate_pi()
-        text = f"Estimated Pi: {pi_text:.6f} (Points: {num_points})"
-        rl.draw_text_ex(font, text, (10, RENDER_SIZE + 10), 32, 0, rl.BLACK)
-        # Mode text
-        mode_text = "Mode: Random" if current_state == STATE_RANDOM else "Mode: Uniform"
-        rl.draw_text_ex(font, mode_text, (10, RENDER_SIZE + 50), 32, 0, rl.BLACK)
+        render_text_area(font)
         rl.end_drawing()
 
     rl.unload_font(font)
